@@ -10,7 +10,10 @@ import com.ecotech.invoicelinkgen.repository.InvoiceLinkRepository;
 import com.ecotech.invoicelinkgen.util.LinkGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +23,13 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class InvoiceLinkServiceImpl implements InvoiceLinkService {
-
-    private final InvoiceLinkRepository invoiceLinkRepository;
-    private final ObjectMapper mapper;
     @Value("${paymentModal}")
     private String paymentModal;
 
-    public InvoiceLinkServiceImpl(InvoiceLinkRepository invoiceLinkRepository, ObjectMapper mapper) {
-        this.invoiceLinkRepository = invoiceLinkRepository;
-        this.mapper = mapper;
-    }
+    private final InvoiceLinkRepository invoiceLinkRepository;
+    private final ObjectMapper mapper;
 
     @Override
     public InvoiceLink generateInvoiceLink(Invoice invoice, String action, LocalDateTime expiryDate) {
@@ -48,7 +47,8 @@ public class InvoiceLinkServiceImpl implements InvoiceLinkService {
 
     @Override
     public InvoiceLinkResponse getInvoiceLinkParams(String shortcode) throws JsonProcessingException {
-        InvoiceLinkResponse invoiceLinkResponse = new InvoiceLinkResponse();
+        new InvoiceLinkResponse();
+        InvoiceLinkResponse invoiceLinkResponse;
         Optional<InvoiceLink> invoiceLink = invoiceLinkRepository.getInvoiceLinkByShortCode(shortcode);
         if (invoiceLink.isPresent()) {
             Invoice invoice = invoiceLink.get().getInvoice();
@@ -59,7 +59,6 @@ public class InvoiceLinkServiceImpl implements InvoiceLinkService {
             // Add features like if link is oneTime use only and has been used
             invoiceLinkResponse = InvoiceLinkResponse.fromInvoiceLinkAndInvoice(invoiceLink.get(), invoice);
             log.info("Invoice link response for {} shortCode", shortcode);
-            log.info(mapper.writeValueAsString(invoiceLinkResponse));
             return invoiceLinkResponse;
         }
         throw new NotFoundException("Invoice Link Not Found");
